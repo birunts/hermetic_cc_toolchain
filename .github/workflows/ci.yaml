@@ -9,7 +9,7 @@ defaults:
 concurrency:
   # Cancels pending runs when a PR gets updated.
   group: ${{ github.head_ref || github.run_id }}-${{ github.actor }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 jobs:
 
   build-and-test:
@@ -58,8 +58,24 @@ jobs:
       # Linux, macOS and Windows
       - run: ci/list_toolchains_platforms
       - run: tools/bazel test //...
-      - run: ci/prepare_git && ci/test_example rules_cc override_repository
-      - run: ci/prepare_git && ci/test_example bzlmod override_module
+      - name: Run ci/prepare_git && ci/test_example rules_cc override_repository
+        run: |
+          is_breaking_change=0
+          case "${{ github.event.pull_request.body }}" in
+            *BREAKING[\s_]CHANGE*)
+              is_breaking_change=1
+              ;;
+          esac
+          ci/prepare_git && ci/test_example rules_cc override_repository ${is_breaking_change}
+      - name: Run ci/prepare_git && ci/test_example bzlmod override_module
+        run: |
+          is_breaking_change=0
+          case "${{ github.event.pull_request.body }}" in
+            *BREAKING[\s_]CHANGE*)
+              is_breaking_change=1
+              ;;
+          esac
+          ci/prepare_git && ci/test_example bzlmod override_module ${is_breaking_change}
 
       # Test the Zig toolchain for Darwin on Darwin.
       - run: tools/bazel test --config=macos_toolchains --@rules_go//go/config:static --@rules_go//go/config:pure //test/c/...
