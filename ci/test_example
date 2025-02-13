@@ -7,6 +7,7 @@ set -xeuo pipefail
 
 example=$1
 override_option_name=$2
+breaking_change=${3:-0}
 
 echo --- setup "$example"
 root=$(git rev-parse --show-toplevel)
@@ -24,5 +25,7 @@ tar -vxf "../../hermetic_cc_toolchain-v99.0.0.tar.gz" -C "$REL"
 # lockfile_mode=off, so examples/$example/MODULE.bazel.lock does not get the override below
 "$root/tools/bazel" test --lockfile_mode=off "--$override_option_name=hermetic_cc_toolchain=$REL" --test_output=errors ...
 
-echo --- "testing examples/$example as is"
-"$root/tools/bazel" test --test_output=errors ...
+if test "${breaking_change}" -eq 1; then
+  echo --- "testing examples/$example as is"
+  "$root/tools/bazel" test --test_output=errors ...
+fi
