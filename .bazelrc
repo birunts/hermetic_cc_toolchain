@@ -19,6 +19,9 @@ build:macos_toolchains --build_tag_filters=
 build:linux --config=macos_toolchains
 build:windows --config=macos_toolchains
 build:macos --build_tag_filters=-darwin_c
+# build:macos --action_env BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
+
+build --toolchain_resolution_debug='@bazel_tools//tools/cpp:toolchain_type'
 
 test --sandbox_default_allow_network=false
 test --test_output=errors
